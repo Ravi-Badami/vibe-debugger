@@ -37,7 +37,8 @@
     "onStartupFinished",
     "onLanguage:javascript",
     "onLanguage:typescript",
-    "onLanguage:python"
+    "onLanguage:python",
+    "onChatParticipant:vibedebugger"
   ],
   "main": "./dist/extension.js",
   "contributes": {
