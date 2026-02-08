@@ -3,12 +3,14 @@ import * as vscode from 'vscode';
 import { ErrorMonitor } from './errorMonitor';
 import { ContextCapture, DebugContext } from './contextCapture';
 import { PromptEnhancer } from './promptEnhancer';
+import { NotificationHandler } from './notificationHandler';
 
 // Global variables
 let statusBarItem: vscode.StatusBarItem;
 let errorMonitor: ErrorMonitor;
 let contextCapture: ContextCapture;
 let promptEnhancer: PromptEnhancer;
+let notificationHandler: NotificationHandler;
 let debugContexts: Map<string, DebugContext> = new Map();
 
 async function handleChatRequest(
@@ -123,6 +125,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Start error monitoring
     errorMonitor.startMonitoring();
+
+    // Create notification handler
+    notificationHandler = new NotificationHandler(errorMonitor);
 
     // Listen to error persisted events
     errorMonitor.on('errorPersisted', errorData => {

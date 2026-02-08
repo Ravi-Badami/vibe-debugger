@@ -21,7 +21,27 @@
         "command": "vibe-debugger.helloWorld",
         "title": "Hello World"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Vibe Debugger",
+      "properties": {
+        "vibeDebugger.enableAutoNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable automatic error notifications"
+        },
+        "vibeDebugger.minErrorPersistenceTime": {
+          "type": "number",
+          "default": 10000,
+          "description": "Minimum time (ms) an error must persist before notification"
+        },
+        "vibeDebugger.maxNotificationsPerHour": {
+          "type": "number",
+          "default": 5,
+          "description": "Maximum number of notifications per hour"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
