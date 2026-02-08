@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 import * as vscode from 'vscode';
 import { ErrorMonitor } from './errorMonitor';
-import { ContextCapture } from './contextCapture';
+import { ContextCapture, DebugContext } from './contextCapture';
 import { PromptEnhancer } from './promptEnhancer';
 
 // Global variables
@@ -9,6 +9,107 @@ let statusBarItem: vscode.StatusBarItem;
 let errorMonitor: ErrorMonitor;
 let contextCapture: ContextCapture;
 let promptEnhancer: PromptEnhancer;
+let debugContexts: Map<string, DebugContext> = new Map();
+
+async function handleChatRequest(
+  request: vscode.ChatRequest,
+  chatContext: vscode.ChatContext,
+  stream: vscode.ChatResponseStream,
+  token: vscode.CancellationToken
+): Promise<void> {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    stream.markdown('No active editor found. Please open a file with errors.');
+    return;
+  }
+
+  const filePath = editor.document.uri.fsPath;
+  const diagnostics = vscode.languages.getDiagnostics(editor.document.uri);
+  const errors = diagnostics.filter(d => d.severity === vscode.DiagnosticSeverity.Error);
+
+  if (errors.length === 0) {
+    stream.markdown(
+      'No errors found in the current file. The Vibe Debugger helps with code errors.'
+    );
+    return;
+  }
+
+  // Check if this is an answer to a previous question
+  const lastResponse = chatContext.history
+    .filter(h => h instanceof vscode.ChatResponseTurn)
+    .slice(-1)[0] as vscode.ChatResponseTurn | undefined;
+
+  const lastMessage = lastResponse?.response
+    .filter(r => r instanceof vscode.ChatResponseMarkdownPart)
+    .map(r => (r as vscode.ChatResponseMarkdownPart).value.value)
+    .join('');
+
+  const isAnsweringQuestion =
+    lastMessage &&
+    (lastMessage.includes('?') || lastMessage.includes('What') || lastMessage.includes('How'));
+
+  if (isAnsweringQuestion && debugContexts.has(filePath)) {
+    // User is answering a clarifying question
+    const debugContext = debugContexts.get(filePath)!;
+    stream.progress('Copilot is analyzing your response and generating a fix...');
+
+    const enhancedPrompt = promptEnhancer.enhancePrompt(
+      request.prompt,
+      debugContext,
+      request.prompt, // user answer
+      undefined, // analyzed problem
+      undefined // specific steps
+    );
+
+    // Use language model to generate fix
+    const models = await vscode.lm.selectChatModels();
+    const model = models[0];
+    const messages = [vscode.LanguageModelChatMessage.User(enhancedPrompt)];
+
+    const response = await model.sendRequest(messages, {}, token);
+    let fullResponse = '';
+    for await (const fragment of response.text) {
+      fullResponse += fragment;
+      stream.markdown(fullResponse);
+    }
+
+    // Clear the stored context
+    debugContexts.delete(filePath);
+  } else {
+    // Ask clarifying question
+    stream.progress('Analyzing error and generating clarifying question...');
+
+    const error = errors[0]; // Take the first error
+    const errorData = {
+      filePath,
+      line: error.range.start.line,
+      message: error.message,
+      severity: 'Error' as const,
+      firstDetected: Date.now(),
+      lastSeen: Date.now(),
+      hasPersisted: false,
+      fileChangedWhileError: false
+    };
+
+    const debugContext = await contextCapture.captureContext(errorData);
+    debugContexts.set(filePath, debugContext);
+
+    // Generate clarifying question using language model
+    const models = await vscode.lm.selectChatModels();
+    const model = models[0];
+    const questionPrompt = `Based on this error: "${error.message}" in ${debugContext.language} at line ${error.range.start.line}, ask one simple clarifying question to understand what the user wants to achieve. Keep it beginner-friendly.`;
+
+    const messages = [vscode.LanguageModelChatMessage.User(questionPrompt)];
+
+    const response = await model.sendRequest(messages, {}, token);
+    let question = '';
+    for await (const fragment of response.text) {
+      question += fragment;
+    }
+
+    stream.markdown(question);
+  }
+}
 
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
@@ -34,16 +135,14 @@ export function activate(context: vscode.ExtensionContext) {
       'vibedebugger',
       async (
         request: vscode.ChatRequest,
-        context: vscode.ChatContext,
+        chatContext: vscode.ChatContext,
         stream: vscode.ChatResponseStream,
         token: vscode.CancellationToken
       ) => {
-        // Handle chat requests - basic implementation
-        const enhancedPrompt = promptEnhancer.enhance(request.prompt);
-        stream.markdown(`Vibe Debugger: ${enhancedPrompt}`);
+        await handleChatRequest(request, chatContext, stream, token);
       }
     );
-    chatParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'icon.png'); // Optional icon
+    chatParticipant.iconPath = new vscode.ThemeIcon('debug-alt');
     context.subscriptions.push(chatParticipant);
 
     // Create status bar item
