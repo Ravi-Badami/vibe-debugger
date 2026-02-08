@@ -37,8 +37,7 @@
     "onStartupFinished",
     "onLanguage:javascript",
     "onLanguage:typescript",
-    "onLanguage:python",
-    "onChatParticipant:vibedebugger"
+    "onLanguage:python"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -47,13 +46,7 @@
         "id": "vibedebugger",
         "name": "Vibe Debugger",
         "description": "Asks clarifying questions before fixing errors",
-        "isSticky": true,
-        "commands": [
-          {
-            "name": "fix",
-            "description": "Fix code errors with clarifying questions"
-          }
-        ]
+        "isSticky": true
       }
     ],
     "commands": [
