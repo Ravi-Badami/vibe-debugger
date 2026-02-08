@@ -1,4 +1,4 @@
-# Vibe Debugger 🚀
+# Vibe Debugger
 
 [![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/RavikumarBadami.vibe-debugger)](https://marketplace.visualstudio.com/items?itemName=RavikumarBadami.vibe-debugger)
 [![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/RavikumarBadami.vibe-debugger)](https://marketplace.visualstudio.com/items?itemName=RavikumarBadami.vibe-debugger)
@@ -6,48 +6,56 @@
 
 **Enhance GitHub Copilot with intelligent error analysis and clarifying questions.**
 
-Vibe Debugger doesn't replace Copilot—it makes it smarter! By asking clarifying questions and gathering comprehensive context, it helps Copilot understand your intent and generate better fixes.
+Vibe Debugger enhances GitHub Copilot by providing intelligent error analysis and generating clarifying questions to improve code fix suggestions. It works seamlessly with Copilot to deliver more accurate and context-aware solutions.
 
-## ✨ Features
+## Features
 
-- 🤔 **Asks clarifying questions** in simple, beginner-friendly language
-- 📋 **Gathers comprehensive context** (code, imports, git changes, etc.)
-- 💡 **Provides enhanced context** for Copilot to generate perfect fixes
-- 🎯 **11 specialized error categories** with tailored questions
-- 🚀 **No API calls needed** - works seamlessly with your existing Copilot
+- **Clarifying Questions**: Generates targeted questions in clear, accessible language to understand error context
+- **Comprehensive Context Gathering**: Collects code, imports, git changes, and other relevant information
+- **Enhanced Context for Copilot**: Provides structured context to enable Copilot to generate more precise fixes
+- **Specialized Error Categories**: Supports 11 distinct error types with tailored analysis approaches
+- **Seamless Integration**: Operates without external API calls, working directly with existing Copilot installations
 
-## 📋 Requirements
+## Requirements
 
-- **GitHub Copilot** subscription (required)
+- **GitHub Copilot**: Active subscription required
 - **Visual Studio Code**: Version 1.109.0 or higher
 - **Supported Languages**: JavaScript, TypeScript
 - **Internet Connection**: Required for AI-powered features
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Installation
 
-1. Install [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) (if not already installed)
-2. Install Vibe Debugger from the marketplace
-3. That's it! Start using `@vibedebugger` in Copilot Chat
+1. Ensure [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) is installed and configured
+2. Install Vibe Debugger from the Visual Studio Marketplace
+3. Restart VS Code if necessary
+4. Begin using `@vibedebugger` in the Copilot Chat interface
 
 ### Usage
 
 #### Basic Workflow
 
-1. Open a file with errors
-2. Open Copilot Chat (`Ctrl/Cmd+Shift+I`)
-3. Type: `@vibedebugger fix this error`
-4. Answer the clarifying question in your own words
-5. Vibe Debugger provides enhanced context
-6. Ask `@copilot` to fix using that context
-7. Get your perfect fix! ✨
+1. Open a file containing errors in VS Code
+2. Access Copilot Chat (`Ctrl/Cmd+Shift+I`)
+3. Enter: `@vibedebugger fix this error`
+4. Respond to the generated clarifying question
+5. Allow Vibe Debugger to provide enhanced context
+6. Request `@copilot` to generate a fix using the provided context
 
-#### Example
+#### Example Interaction
 
-## 💬 Using the Chat Interface
+```
+User: @vibedebugger fix this error
+Vibe Debugger: What type of error are you encountering?
+User: A null reference error
+Vibe Debugger: [Provides enhanced context for Copilot]
+User: @copilot Please fix this null reference error using the context above
+```
 
-Interact naturally with Vibe Debugger through VS Code's chat interface:
+## Chat Interface
+
+Interact with Vibe Debugger through VS Code's integrated chat interface:
 
 ```
 @vibedebugger I have a null reference error on line 25
@@ -55,20 +63,20 @@ Interact naturally with Vibe Debugger through VS Code's chat interface:
 @vibedebugger Why is my variable undefined?
 ```
 
-The AI will analyze your current file context and ask targeted questions to guide your debugging process.
+The extension analyzes the current file context and generates targeted questions to facilitate effective debugging.
 
-## 🎮 Try the Demo
+## Demo
 
-Experience Vibe Debugger's capabilities with our interactive demo:
+Explore Vibe Debugger's capabilities with the interactive demo:
 
-1. Open the **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`)
-2. Run **"Vibe Debugger: Run Demo"**
-3. Choose from sample error scenarios:
-   - **Null Reference Errors**: Common undefined/null issues
-   - **Async/Await Problems**: Promise and asynchronous code issues
-   - **DOM Manipulation**: Browser API and DOM-related errors
+1. Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+2. Execute "Vibe Debugger: Run Demo"
+3. Select from available error scenarios:
+   - Null Reference Errors
+   - Async/Await Issues
+   - DOM Manipulation Errors
 
-## ⚙️ Configuration
+## Configuration
 
 Customize Vibe Debugger through VS Code settings (`Ctrl+,`):
 
@@ -79,37 +87,31 @@ Customize Vibe Debugger through VS Code settings (`Ctrl+,`):
 | `vibedebugger.debugMode`               | Enable detailed logging                      | `false` |
 | `vibedebugger.maxNotificationsPerHour` | Maximum notifications per hour               | `5`     |
 
-## 🔧 How It Works
+## How It Works
 
-Vibe Debugger follows a systematic approach to teaching debugging:
+Vibe Debugger employs a systematic approach to error analysis:
 
-1. **Error Detection**: Monitors VS Code's diagnostic system for errors
-2. **Context Analysis**: Gathers relevant code context and error details
-3. **Question Generation**: Creates targeted questions based on error type and context
-4. **Interactive Learning**: Guides you through the debugging process
-5. **Skill Building**: Helps you develop independent debugging abilities
+1. **Error Detection**: Monitors VS Code's diagnostic system for errors and warnings
+2. **Context Analysis**: Collects relevant code context, dependencies, and error details
+3. **Question Generation**: Creates targeted questions based on error type and code context
+4. **Interactive Guidance**: Facilitates step-by-step debugging assistance
+5. **Skill Development**: Promotes independent debugging capabilities through guided learning
 
-## 📋 Requirements
-
-- **Visual Studio Code**: Version 1.109.0 or higher
-- **Supported Languages**: JavaScript, TypeScript
-- **Internet Connection**: Required for AI-powered features
-
-## 🐛 Known Issues
+## Known Issues
 
 - Complex error patterns may require additional context
 - Performance may vary with very large files
-- Some advanced debugging scenarios need manual intervention
+- Some advanced debugging scenarios require manual intervention
 
-## 🙋 Support
+## Support
 
 - **Documentation**: [GitHub Repository](https://github.com/Ravi-Badami/vibe-debugger)
 - **Issues**: [GitHub Issues](https://github.com/Ravi-Badami/vibe-debugger/issues)
 - **Chat Support**: Use `@vibedebugger` in VS Code's chat interface
 
-## 🤝 Contributing
+## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+Contributions are welcome. Please refer to the [Contributing Guide](CONTRIBUTING.md) for detailed information.
 
 ## 📄 License
 
@@ -117,6 +119,6 @@ This extension is licensed under the [MIT License](LICENSE).
 
 ---
 
-**Transform your debugging experience with AI-powered guidance.** 🚀
+**Enhance your debugging workflow with AI-powered assistance.**
 
-_Built with ❤️ for the developer community_
+Developed for the developer community.
