@@ -20,6 +20,11 @@
       {
         "command": "vibe-debugger.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "vibedebugger.runDemo",
+        "title": "Run Demo",
+        "category": "Vibe Debugger"
       }
     ],
     "configuration": {

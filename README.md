@@ -1,71 +1,192 @@
-# vibe-debugger README
+# Vibe Debugger
 
-This is the README for your extension "vibe-debugger". After writing up a brief description, we recommend including the following sections.
+[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/vibe-debugger.vibe-debugger)](https://marketplace.visualstudio.com/items?itemName=vibe-debugger.vibe-debugger)
+[![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/vibe-debugger.vibe-debugger)](https://marketplace.visualstudio.com/items?itemName=vibe-debugger.vibe-debugger)
 
-## Features
+An AI-powered debugging assistant for Visual Studio Code that helps beginners fix code errors by asking clarifying questions before providing solutions.
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+## ✨ Features
 
-For example if there is an image subfolder under your extension project workspace:
+- 🔍 **Automatic Error Detection**: Monitors your code for errors in real-time
+- 🤖 **Smart Question Generation**: Asks context-aware clarifying questions before suggesting fixes
+- 💬 **Interactive Chat Support**: Chat with the AI debugger using `@vibedebugger`
+- ⚙️ **Configurable Notifications**: Customize when and how you receive error notifications
+- 🎯 **Context-Aware Analysis**: Captures file content, recent changes, and error context
+- 🚀 **Demo Mode**: Try the extension with sample error files
 
-\!\[feature X\]\(images/feature-x.png\)
+## 🚀 Quick Start
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+### Installation
 
-## Requirements
+1. Open Visual Studio Code
+2. Go to Extensions (Ctrl+Shift+X)
+3. Search for "Vibe Debugger"
+4. Click Install
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+### First Use
 
-## Extension Settings
+1. Open any file with code errors
+2. Wait for automatic error detection (default: 10 seconds)
+3. Click "Help Me" when the notification appears
+4. Answer the clarifying questions
+5. Receive AI-powered fix suggestions
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+## 🎮 Demo Mode
 
-For example:
+Experience Vibe Debugger with intentionally buggy sample files:
 
-This extension contributes the following settings:
+1. Open Command Palette (Ctrl+Shift+P)
+2. Run "Vibe Debugger: Run Demo"
+3. Select a demo file:
+   - **Null Reference Error**: Common JavaScript null/undefined issues
+   - **Async/Promise Error**: Promise handling and async/await problems
+   - **DOM Error**: HTML/DOM manipulation issues
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+The demo will open a guide panel explaining what to expect and how the extension works.
 
-## Known Issues
+## 💬 Chat Interface
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+Interact directly with Vibe Debugger using the chat interface:
 
-## Release Notes
+```
+@vibedebugger I need help with an error
+```
 
-Users appreciate release notes as you update your extension.
+The AI will analyze your current file and ask clarifying questions to provide better assistance.
 
-### 1.0.0
+## ⚙️ Configuration
 
-Initial release of ...
+Customize Vibe Debugger through VS Code settings:
 
-### 1.0.1
+### Auto Notifications
+- **Setting**: `vibedebugger.autoNotify`
+- **Type**: Boolean
+- **Default**: `true`
+- **Description**: Enable automatic error notifications
 
-Fixed issue #.
+### Notification Delay
+- **Setting**: `vibedebugger.notificationDelay`
+- **Type**: Number (seconds)
+- **Default**: `10`
+- **Description**: Delay before showing error notifications
 
-### 1.1.0
+### Debug Mode
+- **Setting**: `vibedebugger.debugMode`
+- **Type**: Boolean
+- **Default**: `false`
+- **Description**: Enable additional logging for troubleshooting
 
-Added features X, Y, and Z.
+### Max Notifications per Hour
+- **Setting**: `vibedebugger.maxNotificationsPerHour`
+- **Type**: Number
+- **Default**: `5`
+- **Description**: Maximum number of notifications per hour
+
+## 🔧 How It Works
+
+1. **Error Detection**: Monitors VS Code diagnostics for errors
+2. **Persistence Check**: Waits for errors to persist (configurable delay)
+3. **Context Capture**: Gathers file content, error details, and recent changes
+4. **Question Generation**: Creates context-aware clarifying questions
+5. **AI Enhancement**: Uses language models to provide intelligent suggestions
+6. **Interactive Fixes**: Guides users through understanding and fixing errors
+
+## 📁 Project Structure
+
+```
+vibe-debugger/
+├── src/
+│   ├── extension.ts          # Main extension entry point
+│   ├── errorMonitor.ts       # Error detection and monitoring
+│   ├── contextCapture.ts     # Debug context gathering
+│   ├── promptEnhancer.ts     # AI prompt enhancement
+│   ├── notificationHandler.ts # User notifications
+│   ├── questionGenerator.ts  # Smart question generation
+│   ├── config.ts            # Configuration management
+│   └── test/
+│       ├── suite/
+│       │   └── extension.test.ts
+│       └── questionGenerator.test.ts
+├── demo/
+│   └── sample-errors/
+│       ├── null-error.js
+│       ├── async-error.js
+│       └── dom-error.html
+├── package.json
+└── README.md
+```
+
+## 🧪 Testing
+
+### Running Tests
+
+The extension includes comprehensive test coverage. To run the test suite:
+
+```bash
+npm test
+```
+
+**Note**: If you encounter path resolution issues (common with workspace paths containing spaces), you can run tests manually:
+
+```bash
+# Compile tests
+npm run compile-tests
+
+# Run compiled tests with Node.js
+node out/test/extension.test.js
+node out/test/questionGenerator.test.js
+node out/test/suite/extension.test.js
+```
+
+### Test Coverage
+
+Tests cover:
+- ✅ Error detection functionality
+- ✅ Context capture accuracy
+- ✅ Prompt enhancement
+- ✅ Notification triggering
+- ✅ Configuration management
+- ✅ Component integration
+- ✅ Question generation logic
+
+### Test Structure
+
+```
+test/
+├── extension.test.ts          # Basic extension tests
+├── questionGenerator.test.ts  # Unit tests for question generation
+└── suite/
+    └── extension.test.ts      # Comprehensive integration tests
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Run the test suite
+6. Submit a pull request
+
+## 📝 License
+
+MIT License - see LICENSE file for details.
+
+## 🐛 Known Issues
+
+- Demo mode requires the extension to be properly installed
+- Some complex error patterns may need additional context
+- Performance may vary based on file size and complexity
+- Test runner may have issues with workspace paths containing spaces (use manual test execution as workaround)
+
+## 🙏 Acknowledgments
+
+- Built with VS Code Extension API
+- Uses GitHub Copilot Chat for AI assistance
+- Inspired by the need for better debugging education
 
 ---
 
-## Following extension guidelines
+**Happy Debugging!** 🎉
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+For support, please file an issue on GitHub or use the VS Code chat interface with `@vibedebugger`.

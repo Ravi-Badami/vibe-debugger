@@ -1,5 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { ErrorMonitor } from './errorMonitor';
 import { ContextCapture, DebugContext } from './contextCapture';
 import { PromptEnhancer } from './promptEnhancer';
@@ -106,6 +107,120 @@ async function handleChatRequest(
   }
 }
 
+// Demo function to showcase the extension
+async function runDemo(): Promise<void> {
+  try {
+    // Get the demo files path
+    const extensionPath = vscode.extensions.getExtension('vibe-debugger')?.extensionPath;
+    if (!extensionPath) {
+      vscode.window.showErrorMessage('Could not find extension path');
+      return;
+    }
+
+    const demoPath = vscode.Uri.file(path.join(extensionPath, 'demo', 'sample-errors'));
+
+    // Show demo file picker
+    const demoFiles = [
+      { label: 'Null Reference Error (JavaScript)', file: 'null-error.js', description: 'Common null/undefined reference errors' },
+      { label: 'Async/Promise Error (JavaScript)', file: 'async-error.js', description: 'Promise handling and async/await issues' },
+      { label: 'DOM Manipulation Error (HTML)', file: 'dom-error.html', description: 'DOM element access and manipulation errors' }
+    ];
+
+    const selectedDemo = await vscode.window.showQuickPick(demoFiles, {
+      placeHolder: 'Select a demo file to open and see Vibe Debugger in action',
+      matchOnDescription: true
+    });
+
+    if (!selectedDemo) {
+      return;
+    }
+
+    // Open the selected demo file
+    const fileUri = vscode.Uri.joinPath(demoPath, selectedDemo.file);
+    const document = await vscode.workspace.openTextDocument(fileUri);
+    await vscode.window.showTextDocument(document);
+
+    // Show information about the demo
+    const message = `Demo file opened! This file contains intentional errors to demonstrate Vibe Debugger.
+
+**What to expect:**
+1. Errors will be detected automatically
+2. After ${Config.notificationDelay} seconds, you'll get a notification
+3. Click "Help Me" to start the debugging conversation
+4. Vibe Debugger will ask clarifying questions before suggesting fixes
+
+**Current settings:**
+- Auto-notify: ${Config.autoNotify}
+- Notification delay: ${Config.notificationDelay}s
+- Debug mode: ${Config.debugMode}
+
+Try modifying the code or click the notification when it appears!`;
+
+    const panel = vscode.window.createWebviewPanel(
+      'vibeDebuggerDemo',
+      'Vibe Debugger Demo Guide',
+      vscode.ViewColumn.Beside,
+      { enableScripts: true }
+    );
+
+    panel.webview.html = getDemoGuideHtml(message, selectedDemo);
+
+  } catch (error) {
+    console.error('Error running demo:', error);
+    vscode.window.showErrorMessage('Failed to run demo. Check the console for details.');
+  }
+}
+
+function getDemoGuideHtml(message: string, demoFile: any): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: var(--vscode-font-family); padding: 20px; }
+        .demo-title { color: var(--vscode-textLink-foreground); font-size: 1.2em; margin-bottom: 10px; }
+        .demo-description { color: var(--vscode-descriptionForeground); margin-bottom: 15px; }
+        .settings { background: var(--vscode-textBlockQuote-background); padding: 10px; border-radius: 3px; margin: 10px 0; }
+        .instruction { margin: 10px 0; }
+        .highlight { background: var(--vscode-textBlockQuote-border); padding: 2px 4px; border-radius: 2px; }
+      </style>
+    </head>
+    <body>
+      <h2 class="demo-title">🚀 Vibe Debugger Demo</h2>
+      <p class="demo-description">${demoFile.description}</p>
+
+      <div class="settings">
+        <strong>Current Configuration:</strong><br>
+        • Auto-notify: ${Config.autoNotify ? '✅ Enabled' : '❌ Disabled'}<br>
+        • Notification delay: <span class="highlight">${Config.notificationDelay}s</span><br>
+        • Debug mode: ${Config.debugMode ? '✅ Enabled' : '❌ Disabled'}<br>
+        • Max notifications/hour: <span class="highlight">${Config.maxNotificationsPerHour}</span>
+      </div>
+
+      <div class="instruction">
+        <strong>What happens next:</strong>
+        <ol>
+          <li>Errors in the opened file will be detected automatically</li>
+          <li>After the delay period, you'll receive a notification</li>
+          <li>Click "Help Me" in the notification to start debugging</li>
+          <li>Vibe Debugger will ask clarifying questions before suggesting fixes</li>
+        </ol>
+      </div>
+
+      <div class="instruction">
+        <strong>Demo Tips:</strong>
+        <ul>
+          <li>Try modifying the code to see how errors are detected</li>
+          <li>Use <code>@vibedebugger</code> in chat to interact directly</li>
+          <li>Check VS Code settings to customize behavior</li>
+        </ul>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
   try {
@@ -170,6 +285,12 @@ export function activate(context: vscode.ExtensionContext) {
     );
     chatParticipant.iconPath = new vscode.ThemeIcon('debug-alt');
     context.subscriptions.push(chatParticipant);
+
+    // Register demo command
+    const demoCommand = vscode.commands.registerCommand('vibedebugger.runDemo', async () => {
+      await runDemo();
+    });
+    context.subscriptions.push(demoCommand);
 
     // Create status bar item
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
