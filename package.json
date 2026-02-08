@@ -1,8 +1,8 @@
 {
   "name": "vibe-debugger",
   "displayName": "Vibe Debugger",
-  "description": "Helps beginners fix code errors by asking clarifying questions before fixing",
-  "version": "0.1.1",
+  "description": "Enhances GitHub Copilot by asking clarifying questions and providing rich context for better error fixes",
+  "version": "0.2.0",
   "publisher": "RavikumarBadami",
   "repository": {
     "type": "git",
@@ -13,6 +13,7 @@
     "ai",
     "debugging",
     "copilot",
+    "context-provider",
     "beginner",
     "error-fixing",
     "javascript",
@@ -44,8 +45,9 @@
     "chatParticipants": [
       {
         "id": "vibedebugger",
-        "name": "Vibe Debugger",
-        "description": "Asks clarifying questions before fixing errors",
+        "name": "vibedebugger",
+        "fullName": "Vibe Debugger",
+        "description": "Enhances Copilot with error analysis and clarifying questions",
         "isSticky": true
       }
     ],

@@ -1,60 +1,49 @@
-# Vibe Debugger
+# Vibe Debugger 🚀
 
 [![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/RavikumarBadami.vibe-debugger)](https://marketplace.visualstudio.com/items?itemName=RavikumarBadami.vibe-debugger)
 [![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/RavikumarBadami.vibe-debugger)](https://marketplace.visualstudio.com/items?itemName=RavikumarBadami.vibe-debugger)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-An intelligent AI-powered debugging assistant for Visual Studio Code that transforms how beginners learn to debug code. Instead of providing direct answers, Vibe Debugger asks targeted questions to guide developers through the debugging process, building problem-solving skills.
+**Enhance GitHub Copilot with intelligent error analysis and clarifying questions.**
 
-## ✨ Key Features
+Vibe Debugger doesn't replace Copilot—it makes it smarter! By asking clarifying questions and gathering comprehensive context, it helps Copilot understand your intent and generate better fixes.
 
-### 🤖 Intelligent Error Analysis
+## ✨ Features
 
-- **Real-time Error Detection**: Automatically monitors your code for syntax and runtime errors
-- **Context-Aware Analysis**: Captures file content, error details, and surrounding code context
-- **Smart Diagnostics**: Understands error patterns and provides relevant insights
+- 🤔 **Asks clarifying questions** in simple, beginner-friendly language
+- 📋 **Gathers comprehensive context** (code, imports, git changes, etc.)
+- 💡 **Provides enhanced context** for Copilot to generate perfect fixes
+- 🎯 **11 specialized error categories** with tailored questions
+- 🚀 **No API calls needed** - works seamlessly with your existing Copilot
 
-### 🎓 Educational Approach
+## 📋 Requirements
 
-- **Guided Learning**: Asks clarifying questions instead of giving direct answers
-- **Progressive Disclosure**: Builds understanding step by step
-- **Problem-Solving Skills**: Teaches debugging methodology, not just fixes
-
-### 💬 Interactive Chat Interface
-
-- **Natural Language Support**: Chat with the AI debugger using `@vibedebugger`
-- **Conversational Debugging**: Explain your issues in plain English
-- **Follow-up Questions**: Refines understanding based on your responses
-
-### ⚙️ Customizable Experience
-
-- **Flexible Notifications**: Configure when and how you receive error alerts
-- **Rate Limiting**: Control notification frequency to avoid disruption
-- **Debug Mode**: Enable detailed logging for troubleshooting
-
-### 🚀 Demo Mode
-
-- **Interactive Learning**: Try the extension with pre-built error scenarios
-- **Sample Cases**: Null reference errors, async/await issues, DOM manipulation problems
-- **Guided Experience**: Learn through hands-on examples
+- **GitHub Copilot** subscription (required)
+- **Visual Studio Code**: Version 1.109.0 or higher
+- **Supported Languages**: JavaScript, TypeScript
+- **Internet Connection**: Required for AI-powered features
 
 ## 🚀 Getting Started
 
 ### Installation
 
-1. Open **Visual Studio Code**
-2. Navigate to the **Extensions** view (`Ctrl+Shift+X` / `Cmd+Shift+X`)
-3. Search for **"Vibe Debugger"**
-4. Click **Install**
+1. Install [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) (if not already installed)
+2. Install Vibe Debugger from the marketplace
+3. That's it! Start using `@vibedebugger` in Copilot Chat
 
-### Quick Start
+### Usage
 
-1. **Open a JavaScript or TypeScript file** in your workspace
-2. **Introduce an error** (e.g., reference an undefined variable)
-3. **Wait for the notification** (appears after 10 seconds by default)
-4. **Click "Help Me"** when the notification appears
-5. **Answer the questions** posed by the AI debugger
-6. **Learn and apply** the suggested debugging approach
+#### Basic Workflow
+
+1. Open a file with errors
+2. Open Copilot Chat (`Ctrl/Cmd+Shift+I`)
+3. Type: `@vibedebugger fix this error`
+4. Answer the clarifying question in your own words
+5. Vibe Debugger provides enhanced context
+6. Ask `@copilot` to fix using that context
+7. Get your perfect fix! ✨
+
+#### Example
 
 ## 💬 Using the Chat Interface
 
@@ -131,4 +120,3 @@ This extension is licensed under the [MIT License](LICENSE).
 **Transform your debugging experience with AI-powered guidance.** 🚀
 
 _Built with ❤️ for the developer community_
-  

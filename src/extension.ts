@@ -5,7 +5,7 @@ import { ErrorMonitor } from './errorMonitor';
 import { ContextCapture, DebugContext } from './contextCapture';
 import { PromptEnhancer } from './promptEnhancer';
 import { NotificationHandler } from './notificationHandler';
-import { QuestionGenerator } from './questionGenerator';
+import { QuestionGenerator, QuestionData } from './questionGenerator';
 import { Config } from './config';
 
 // Global variables
@@ -15,103 +15,286 @@ let contextCapture: ContextCapture;
 let promptEnhancer: PromptEnhancer;
 let notificationHandler: NotificationHandler;
 let questionGenerator: QuestionGenerator;
-let debugContexts: Map<string, DebugContext> = new Map();
 
+// Store conversation context
+interface ConversationContext {
+  debugContext: DebugContext;
+  questionData: QuestionData;
+  timestamp: number;
+}
+let conversationContexts: Map<string, ConversationContext> = new Map();
+
+/**
+ * Main chat request handler
+ */
 async function handleChatRequest(
   request: vscode.ChatRequest,
   chatContext: vscode.ChatContext,
   stream: vscode.ChatResponseStream,
   token: vscode.CancellationToken
 ): Promise<void> {
-  const editor = vscode.window.activeTextEditor;
-  if (!editor) {
-    stream.markdown('No active editor found. Please open a file with errors.');
-    return;
-  }
+  try {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      stream.markdown('❌ **No active editor found.**\n\nPlease open a file with code errors.');
+      return;
+    }
 
-  const filePath = editor.document.uri.fsPath;
-  const diagnostics = vscode.languages.getDiagnostics(editor.document.uri);
-  const errors = diagnostics.filter(d => d.severity === vscode.DiagnosticSeverity.Error);
+    const filePath = editor.document.uri.fsPath;
+    const diagnostics = vscode.languages.getDiagnostics(editor.document.uri);
+    const errors = diagnostics.filter(d => d.severity === vscode.DiagnosticSeverity.Error);
 
-  if (errors.length === 0) {
+    if (errors.length === 0) {
+      stream.markdown(
+        '✅ **No errors found!**\n\nYour code looks good. Vibe Debugger helps when you have errors in your code.'
+      );
+      return;
+    }
+
+    if (Config.debugMode) {
+      console.log(`[Vibe Debugger] Processing request: "${request.prompt}"`);
+      console.log(`[Vibe Debugger] Found ${errors.length} error(s) in ${filePath}`);
+    }
+
+    // Check if user is answering a previous question
+    const isAnsweringQuestion = await checkIfAnsweringQuestion(chatContext, filePath);
+
+    if (isAnsweringQuestion) {
+      // USER ANSWERED - AUTO-PASTE ENHANCED PROMPT
+      await handleUserAnswerAndPastePrompt(request, stream, token, filePath);
+    } else {
+      // NEW REQUEST - ASK CLARIFYING QUESTION
+      await askClarifyingQuestion(request, stream, editor, errors);
+    }
+  } catch (error) {
+    console.error('[Vibe Debugger] Error in handleChatRequest:', error);
     stream.markdown(
-      'No errors found in the current file. The Vibe Debugger helps with code errors.'
+      `❌ **Something went wrong.**\n\n${error instanceof Error ? error.message : 'Unknown error'}`
     );
-    return;
+  }
+}
+
+/**
+ * Check if user is answering a previous question
+ */
+async function checkIfAnsweringQuestion(
+  chatContext: vscode.ChatContext,
+  filePath: string
+): Promise<boolean> {
+  if (!conversationContexts.has(filePath)) {
+    return false;
   }
 
-  // Check if this is an answer to a previous question
   const lastResponse = chatContext.history
     .filter(h => h instanceof vscode.ChatResponseTurn)
     .slice(-1)[0] as vscode.ChatResponseTurn | undefined;
 
-  const lastMessage = lastResponse?.response
+  if (!lastResponse) {
+    return false;
+  }
+
+  const lastMessage = lastResponse.response
     .filter(r => r instanceof vscode.ChatResponseMarkdownPart)
     .map(r => (r as vscode.ChatResponseMarkdownPart).value.value)
     .join('');
 
-  const isAnsweringQuestion =
-    lastMessage &&
-    (lastMessage.includes('?') || lastMessage.includes('What') || lastMessage.includes('How'));
+  return lastMessage.includes('❓') || lastMessage.includes('🤔');
+}
 
-  if (isAnsweringQuestion && debugContexts.has(filePath)) {
-    // User is answering a clarifying question
-    const debugContext = debugContexts.get(filePath)!;
-    stream.progress('Copilot is analyzing your response and generating a fix...');
+/**
+ * Ask clarifying question to understand user intent
+ */
+async function askClarifyingQuestion(
+  request: vscode.ChatRequest,
+  stream: vscode.ChatResponseStream,
+  editor: vscode.TextEditor,
+  errors: vscode.Diagnostic[]
+): Promise<void> {
+  stream.progress('🔍 Analyzing error...');
 
-    const enhancedPrompt = promptEnhancer.enhancePrompt(
-      request.prompt,
-      debugContext,
-      request.prompt, // user answer
-      undefined, // analyzed problem
-      undefined // specific steps
-    );
+  const filePath = editor.document.uri.fsPath;
+  const error = errors[0];
 
-    // Use language model to generate fix
-    const models = await vscode.lm.selectChatModels();
-    const model = models[0];
-    const messages = [vscode.LanguageModelChatMessage.User(enhancedPrompt)];
+  const errorData = {
+    filePath,
+    line: error.range.start.line,
+    message: error.message,
+    severity: 'Error' as const,
+    firstDetected: Date.now(),
+    lastSeen: Date.now(),
+    hasPersisted: false,
+    fileChangedWhileError: false
+  };
 
-    const response = await model.sendRequest(messages, {}, token);
-    let fullResponse = '';
-    for await (const fragment of response.text) {
-      fullResponse += fragment;
-      stream.markdown(fullResponse);
+  if (Config.debugMode) {
+    console.log(`[Vibe Debugger] Error: ${error.message} at line ${error.range.start.line}`);
+  }
+
+  stream.progress('📋 Gathering context...');
+  const debugContext = await contextCapture.captureContext(errorData);
+
+  stream.progress('💡 Generating question...');
+  const questionData = questionGenerator.generateQuestion(debugContext);
+
+  if (Config.debugMode) {
+    console.log(`[Vibe Debugger] Question category: ${questionData.errorCategory}`);
+  }
+
+  // Store conversation context
+  conversationContexts.set(filePath, {
+    debugContext,
+    questionData,
+    timestamp: Date.now()
+  });
+
+  // Show the question
+  stream.markdown('## 🤔 Let me understand what you need\n\n');
+  stream.markdown(questionData.question);
+  stream.markdown('\n\n---\n\n');
+  stream.markdown("*Once you answer, I'll prepare an enhanced prompt for Copilot to fix it!* 🚀");
+}
+
+/**
+ * User answered - auto-paste enhanced prompt into chat input
+ */
+async function handleUserAnswerAndPastePrompt(
+  request: vscode.ChatRequest,
+  stream: vscode.ChatResponseStream,
+  token: vscode.CancellationToken,
+  filePath: string
+): Promise<void> {
+  const conversationContext = conversationContexts.get(filePath);
+  if (!conversationContext) {
+    stream.markdown('❌ **Context lost.** Please try again with `@vibedebugger fix this error`');
+    return;
+  }
+
+  const { debugContext, questionData } = conversationContext;
+  const userAnswer = request.prompt;
+
+  if (Config.debugMode) {
+    console.log(`[Vibe Debugger] User answered: "${userAnswer}"`);
+    console.log('[Vibe Debugger] Building enhanced prompt for Copilot');
+  }
+
+  stream.progress('💭 Understanding your answer...');
+  stream.progress('📦 Building enhanced prompt...');
+
+  // Build the enhanced prompt (NO @copilot, NO @vibedebugger, NO code blocks)
+  const enhancedPrompt = buildEnhancedPrompt(debugContext, questionData, userAnswer);
+
+  if (Config.debugMode) {
+    console.log(`[Vibe Debugger] Enhanced prompt:\n${enhancedPrompt}`);
+  }
+
+  stream.markdown('## ✅ Enhanced Prompt Ready!\n\n');
+  stream.markdown(`I've analyzed your answer and prepared an optimized prompt for Copilot:\n\n`);
+  stream.markdown(`- **Error type:** ${questionData.errorCategory}\n`);
+  stream.markdown(`- **Location:** ${debugContext.fileName}:${debugContext.errorLine}\n`);
+  stream.markdown(`- **Your intent:** "${userAnswer}"\n\n`);
+
+  // Copy to clipboard
+  await vscode.env.clipboard.writeText(enhancedPrompt);
+
+  // Open/focus chat
+  await vscode.commands.executeCommand('workbench.action.chat.open');
+
+  // Wait for chat to be ready
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  // ⭐ KEY FIX: Select all text in chat input first (to clear @vibedebugger)
+  let pasteSuccess = false;
+  try {
+    // Select all in the chat input to replace @vibedebugger
+    await vscode.commands.executeCommand('editor.action.selectAll');
+
+    // Small delay
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Now paste (this will replace the @vibedebugger mention)
+    await vscode.commands.executeCommand('editor.action.clipboardPasteAction');
+    pasteSuccess = true;
+
+    if (Config.debugMode) {
+      console.log('[Vibe Debugger] Auto-paste successful');
     }
+  } catch (error) {
+    if (Config.debugMode) {
+      console.log('[Vibe Debugger] Auto-paste failed:', error);
+    }
+  }
 
-    // Clear the stored context
-    debugContexts.delete(filePath);
+  // Show appropriate message
+  if (pasteSuccess) {
+    stream.markdown('---\n\n');
+    stream.markdown('✅ **Prompt pasted in chat input!**\n\n');
+    stream.markdown('👉 **Just press Enter** (or click Send 📤) to send it to Copilot.\n\n');
+    stream.markdown(
+      '⚠️ *Make sure `@vibedebugger` is removed from the chat input before sending!*\n\n'
+    );
   } else {
-    // Ask clarifying question
-    stream.progress('Analyzing error and generating clarifying question...');
+    stream.markdown('---\n\n');
+    stream.markdown('📋 **Prompt copied to clipboard!**\n\n');
+    stream.markdown('👉 **Steps:**\n');
+    stream.markdown('1. Clear the chat input (remove `@vibedebugger`)\n');
+    stream.markdown('2. Paste (Ctrl+V / Cmd+V)\n');
+    stream.markdown('3. Press Enter to send to Copilot\n\n');
+  }
 
-    const error = errors[0]; // Take the first error
-    const errorData = {
-      filePath,
-      line: error.range.start.line,
-      message: error.message,
-      severity: 'Error' as const,
-      firstDetected: Date.now(),
-      lastSeen: Date.now(),
-      hasPersisted: false,
-      fileChangedWhileError: false
-    };
+  // Show preview
+  stream.markdown('**Preview:**\n');
+  stream.markdown('```\n');
+  const preview =
+    enhancedPrompt.length > 250 ? enhancedPrompt.substring(0, 250) + '...' : enhancedPrompt;
+  stream.markdown(preview);
+  stream.markdown('\n```\n');
 
-    const debugContext = await contextCapture.captureContext(errorData);
-    debugContexts.set(filePath, debugContext);
+  // Cleanup
+  conversationContexts.delete(filePath);
 
-    // Generate clarifying question using QuestionGenerator
-    const questionData = questionGenerator.generateQuestion(debugContext);
-
-    stream.markdown(questionData.question);
+  if (Config.debugMode) {
+    console.log('[Vibe Debugger] Conversation completed');
   }
 }
 
-// Demo function to showcase the extension
+/**
+ * Build enhanced prompt for Copilot (clean, no code blocks, no @copilot)
+ * Copilot will read the actual file content itself!
+ */
+function buildEnhancedPrompt(
+  debugContext: DebugContext,
+  questionData: QuestionData,
+  userAnswer: string
+): string {
+  // Start with clear instruction
+  let prompt = `Fix the ${questionData.errorCategory} error in ${debugContext.fileName} at line ${debugContext.errorLine}.\n\n`;
+
+  // Add error details
+  prompt += `Error: "${debugContext.error.message}"\n\n`;
+
+  // Add user's intent (THE KEY PART - reduces hallucination!)
+  prompt += `User wants: "${userAnswer}"\n\n`;
+
+  // Add imports if available (helps Copilot understand context)
+  if (debugContext.relatedImports && debugContext.relatedImports.length > 0) {
+    const imports = debugContext.relatedImports.slice(0, 5).join(', ');
+    prompt += `Related imports: ${imports}\n\n`;
+  }
+
+  // Clear instruction for complete fix
+  prompt += `Provide a complete working fix that addresses the user's intent.`;
+
+  return prompt;
+}
+
+/**
+ * Demo function to showcase the extension
+ */
 async function runDemo(): Promise<void> {
   try {
-    // Get the demo files path
-    const extensionPath = vscode.extensions.getExtension('vibe-debugger')?.extensionPath;
+    const extensionPath = vscode.extensions.getExtension(
+      'RavikumarBadami.vibe-debugger'
+    )?.extensionPath;
     if (!extensionPath) {
       vscode.window.showErrorMessage('Could not find extension path');
       return;
@@ -119,7 +302,6 @@ async function runDemo(): Promise<void> {
 
     const demoPath = vscode.Uri.file(path.join(extensionPath, 'demo', 'sample-errors'));
 
-    // Show demo file picker
     const demoFiles = [
       {
         label: 'Null Reference Error (JavaScript)',
@@ -147,26 +329,9 @@ async function runDemo(): Promise<void> {
       return;
     }
 
-    // Open the selected demo file
     const fileUri = vscode.Uri.joinPath(demoPath, selectedDemo.file);
     const document = await vscode.workspace.openTextDocument(fileUri);
     await vscode.window.showTextDocument(document);
-
-    // Show information about the demo
-    const message = `Demo file opened! This file contains intentional errors to demonstrate Vibe Debugger.
-
-**What to expect:**
-1. Errors will be detected automatically
-2. After ${Config.notificationDelay} seconds, you'll get a notification
-3. Click "Help Me" to start the debugging conversation
-4. Vibe Debugger will ask clarifying questions before suggesting fixes
-
-**Current settings:**
-- Auto-notify: ${Config.autoNotify}
-- Notification delay: ${Config.notificationDelay}s
-- Debug mode: ${Config.debugMode}
-
-Try modifying the code or click the notification when it appears!`;
 
     const panel = vscode.window.createWebviewPanel(
       'vibeDebuggerDemo',
@@ -175,67 +340,107 @@ Try modifying the code or click the notification when it appears!`;
       { enableScripts: true }
     );
 
-    panel.webview.html = getDemoGuideHtml(message, selectedDemo);
+    panel.webview.html = getDemoGuideHtml(selectedDemo);
   } catch (error) {
     console.error('Error running demo:', error);
     vscode.window.showErrorMessage('Failed to run demo. Check the console for details.');
   }
 }
 
-function getDemoGuideHtml(message: string, demoFile: any): string {
+/**
+ * Generate demo guide HTML
+ */
+function getDemoGuideHtml(demoFile: any): string {
   return `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
       <style>
-        body { font-family: var(--vscode-font-family); padding: 20px; }
-        .demo-title { color: var(--vscode-textLink-foreground); font-size: 1.2em; margin-bottom: 10px; }
-        .demo-description { color: var(--vscode-descriptionForeground); margin-bottom: 15px; }
-        .settings { background: var(--vscode-textBlockQuote-background); padding: 10px; border-radius: 3px; margin: 10px 0; }
-        .instruction { margin: 10px 0; }
-        .highlight { background: var(--vscode-textBlockQuote-border); padding: 2px 4px; border-radius: 2px; }
+        body {
+          font-family: var(--vscode-font-family);
+          padding: 20px;
+          line-height: 1.6;
+        }
+        .title {
+          color: var(--vscode-textLink-foreground);
+          font-size: 1.5em;
+          margin-bottom: 10px;
+        }
+        .description {
+          color: var(--vscode-descriptionForeground);
+          margin-bottom: 20px;
+        }
+        .section {
+          background: var(--vscode-textBlockQuote-background);
+          padding: 15px;
+          border-radius: 5px;
+          margin: 15px 0;
+          border-left: 3px solid var(--vscode-textLink-foreground);
+        }
+        .highlight {
+          background: var(--vscode-textBlockQuote-border);
+          padding: 2px 6px;
+          border-radius: 3px;
+          font-family: monospace;
+        }
+        ol, ul {
+          margin: 10px 0;
+          padding-left: 25px;
+        }
+        li {
+          margin: 5px 0;
+        }
       </style>
     </head>
     <body>
-      <h2 class="demo-title">🚀 Vibe Debugger Demo</h2>
-      <p class="demo-description">${demoFile.description}</p>
+      <h1 class="title">🚀 Vibe Debugger Demo</h1>
+      <p class="description">${demoFile.description}</p>
 
-      <div class="settings">
-        <strong>Current Configuration:</strong><br>
-        • Auto-notify: ${Config.autoNotify ? '✅ Enabled' : '❌ Disabled'}<br>
-        • Notification delay: <span class="highlight">${Config.notificationDelay}s</span><br>
-        • Debug mode: ${Config.debugMode ? '✅ Enabled' : '❌ Disabled'}<br>
-        • Max notifications/hour: <span class="highlight">${Config.maxNotificationsPerHour}</span>
-      </div>
-
-      <div class="instruction">
-        <strong>What happens next:</strong>
+      <div class="section">
+        <strong>📋 How Vibe Debugger Works:</strong>
         <ol>
-          <li>Errors in the opened file will be detected automatically</li>
-          <li>After the delay period, you'll receive a notification</li>
-          <li>Click "Help Me" in the notification to start debugging</li>
-          <li>Vibe Debugger will ask clarifying questions before suggesting fixes</li>
+          <li>Open Copilot Chat (Ctrl/Cmd + Shift + I)</li>
+          <li>Type: <span class="highlight">@vibedebugger fix this error</span></li>
+          <li>Answer the clarifying question in plain English</li>
+          <li>Enhanced prompt is pasted in chat automatically</li>
+          <li>Press Enter to send to Copilot</li>
+          <li>Copilot responds with a fix you can apply!</li>
         </ol>
       </div>
 
-      <div class="instruction">
-        <strong>Demo Tips:</strong>
+      <div class="section">
+        <strong>💡 Why This Helps:</strong>
         <ul>
-          <li>Try modifying the code to see how errors are detected</li>
-          <li>Use <code>@vibedebugger</code> in chat to interact directly</li>
-          <li>Check VS Code settings to customize behavior</li>
+          <li><strong>Reduces hallucination:</strong> Copilot knows exactly what you want</li>
+          <li><strong>Better context:</strong> Error type, location, and user intent</li>
+          <li><strong>Beginner-friendly:</strong> Questions in simple language</li>
+          <li><strong>Faster fixes:</strong> No back-and-forth with Copilot</li>
         </ul>
+      </div>
+
+      <div class="section">
+        <strong>🎯 Try it now:</strong>
+        <ol>
+          <li>Look at the error in the editor (red squiggly line)</li>
+          <li>Open Copilot Chat</li>
+          <li>Type: <span class="highlight">@vibedebugger fix this error</span></li>
+          <li>Answer in your own words</li>
+          <li>Press Enter when prompt appears</li>
+          <li>Click Apply on Copilot's response! ✨</li>
+        </ol>
       </div>
     </body>
     </html>
   `;
 }
 
-// This method is called when your extension is activated
+/**
+ * Activation function - called when extension is activated
+ */
 export function activate(context: vscode.ExtensionContext) {
   try {
-    console.log('Activating Vibe Debugger extension...');
+    console.log('🚀 Activating Vibe Debugger extension...');
 
     // Initialize components
     errorMonitor = new ErrorMonitor();
@@ -249,73 +454,75 @@ export function activate(context: vscode.ExtensionContext) {
     // Create notification handler
     notificationHandler = new NotificationHandler(errorMonitor);
 
+    context.subscriptions.push({
+      dispose: () => notificationHandler.dispose()
+    });
+
     // Listen to error persisted events
     errorMonitor.on('errorPersisted', errorData => {
-      console.log('Error persisted:', errorData);
-      // TODO: Trigger chat or notification
+      if (Config.debugMode) {
+        console.log('[Vibe Debugger] Error persisted:', errorData);
+      }
     });
 
     // Listen for configuration changes
     const configSubscription = Config.onDidChangeConfiguration(newConfig => {
-      console.log('Vibe Debugger configuration changed:', newConfig);
-
-      // Update notification handler with new settings
-      if (notificationHandler) {
-        // The notification handler will automatically pick up new config values
-        // when its methods are called
+      if (Config.debugMode) {
+        console.log('[Vibe Debugger] Configuration changed:', newConfig);
       }
 
-      // Update error monitor behavior if needed
-      if (errorMonitor) {
-        // Error monitor can check Config.debugMode for additional logging
-        if (Config.debugMode) {
-          console.log('Debug mode enabled - additional logging active');
-        }
-      }
-
-      // Update status bar based on autoNotify setting
       if (statusBarItem) {
         const icon = Config.autoNotify ? '🔍' : '🔍❌';
-        statusBarItem.text = `${icon} Vibe Debugger ${Config.autoNotify ? 'Active' : 'Notifications Off'}`;
-        statusBarItem.tooltip = `Vibe Debugger is monitoring for errors. Auto-notify: ${Config.autoNotify}`;
+        statusBarItem.text = `${icon} Vibe Debugger`;
+        statusBarItem.tooltip = `Vibe Debugger - ${Config.autoNotify ? 'Active' : 'Paused'}. Enhances Copilot with smart context.`;
       }
     });
     context.subscriptions.push(configSubscription);
 
     // Register chat participant
-    const chatParticipant = vscode.chat.createChatParticipant(
-      'vibedebugger',
-      async (
-        request: vscode.ChatRequest,
-        chatContext: vscode.ChatContext,
-        stream: vscode.ChatResponseStream,
-        token: vscode.CancellationToken
-      ) => {
-        await handleChatRequest(request, chatContext, stream, token);
-      }
-    );
+    const chatParticipant = vscode.chat.createChatParticipant('vibedebugger', handleChatRequest);
     chatParticipant.iconPath = new vscode.ThemeIcon('debug-alt');
     context.subscriptions.push(chatParticipant);
 
+    if (Config.debugMode) {
+      console.log('[Vibe Debugger] Chat participant registered with ID: vibedebugger');
+    }
+
     // Register demo command
-    const demoCommand = vscode.commands.registerCommand('vibedebugger.runDemo', async () => {
-      await runDemo();
-    });
+    const demoCommand = vscode.commands.registerCommand('vibedebugger.runDemo', runDemo);
     context.subscriptions.push(demoCommand);
 
     // Create status bar item
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     const icon = Config.autoNotify ? '🔍' : '🔍❌';
-    statusBarItem.text = `${icon} Vibe Debugger ${Config.autoNotify ? 'Active' : 'Notifications Off'}`;
-    statusBarItem.tooltip = `Vibe Debugger is monitoring for errors. Auto-notify: ${Config.autoNotify}`;
+    statusBarItem.text = `${icon} Vibe Debugger`;
+    statusBarItem.tooltip = `Vibe Debugger - ${Config.autoNotify ? 'Active' : 'Paused'}. Enhances Copilot with smart context.`;
+    statusBarItem.command = 'workbench.action.openSettings';
     statusBarItem.show();
     context.subscriptions.push(statusBarItem);
 
-    // Log activation success
-    console.log('Vibe Debugger extension activated successfully!');
-    vscode.window.showInformationMessage('Vibe Debugger is now active.');
+    // Clean up old conversation contexts (older than 30 minutes)
+    setInterval(
+      () => {
+        const now = Date.now();
+        for (const [filePath, context] of conversationContexts.entries()) {
+          if (now - context.timestamp > 30 * 60 * 1000) {
+            conversationContexts.delete(filePath);
+            if (Config.debugMode) {
+              console.log(`[Vibe Debugger] Cleaned up old conversation context for ${filePath}`);
+            }
+          }
+        }
+      },
+      5 * 60 * 1000
+    ); // Run every 5 minutes
+
+    console.log('✅ Vibe Debugger extension activated successfully!');
+    vscode.window.showInformationMessage(
+      '🚀 Vibe Debugger is now active! Helps Copilot understand errors better.'
+    );
   } catch (error) {
-    console.error('Failed to activate Vibe Debugger extension:', error);
+    console.error('❌ Failed to activate Vibe Debugger extension:', error);
     vscode.window.showErrorMessage(
       'Failed to activate Vibe Debugger. Check the console for details.'
     );
@@ -323,17 +530,20 @@ export function activate(context: vscode.ExtensionContext) {
   }
 }
 
-// This method is called when your extension is deactivated
+/**
+ * Deactivation function - called when extension is deactivated
+ */
 export function deactivate() {
   try {
     if (errorMonitor) {
       errorMonitor.stopMonitoring();
     }
     if (statusBarItem) {
-      statusBarItem.hide();
+      statusBarItem.dispose();
     }
-    console.log('Vibe Debugger extension deactivated.');
+    conversationContexts.clear();
+    console.log('✅ Vibe Debugger extension deactivated.');
   } catch (error) {
-    console.error('Error during deactivation:', error);
+    console.error('❌ Error during deactivation:', error);
   }
 }

@@ -1,89 +1,229 @@
-// Prompt Enhancer module
+// Prompt Enhancer module - Enhanced version
 import { DebugContext } from './contextCapture';
+import { QuestionData } from './questionGenerator';
 
 export class PromptEnhancer {
-  enhance(prompt: string): string {
-    // Simple enhancement for chat
-    return `Please help debug this: ${prompt}`;
-  }
-
+  /**
+   * Enhances a prompt for the language model with full context
+   */
   enhancePrompt(
     userInput: string,
     context: DebugContext,
     userAnswer?: string,
-    analyzedProblem?: string,
-    specificFixSteps?: string
+    questionData?: QuestionData
   ): string {
-    const prompt = this.buildPromptTemplate(
-      userInput,
-      context,
-      userAnswer,
-      analyzedProblem,
-      specificFixSteps
-    );
-    return prompt;
+    if (userAnswer) {
+      // User has answered a clarifying question
+      return this.buildFixPromptWithAnswer(userInput, context, userAnswer, questionData);
+    } else {
+      // Initial analysis without user answer
+      return this.buildInitialAnalysisPrompt(userInput, context);
+    }
   }
 
-  private buildPromptTemplate(
+  /**
+   * Build prompt when user has answered the clarifying question
+   */
+  private buildFixPromptWithAnswer(
     userInput: string,
     context: DebugContext,
-    userAnswer?: string,
-    analyzedProblem?: string,
-    specificFixSteps?: string
+    userAnswer: string,
+    questionData?: QuestionData
   ): string {
-    let prompt = `CONTEXT:\n\n`;
-    prompt += `File: ${context.fileName}\n`;
-    prompt += `Error: ${context.error.message}\n`;
-    prompt += `Line: ${context.errorLine}\n`;
-    prompt += `Language: ${context.language}\n\n`;
+    let prompt = `You are an expert debugging assistant helping a developer fix their code. You asked them a clarifying question and they responded. Now provide a complete, working fix.
 
-    prompt += `SURROUNDING CODE:\n${context.surroundingCode}\n\n`;
+=== CONTEXT ===
 
-    prompt += `USER CLARIFICATION:\n${userAnswer || 'Not provided'}\n\n`;
+**File:** ${context.fileName}
+**Language:** ${context.language}
+**Error Location:** Line ${context.errorLine}
+**Error Message:** ${context.error.message}
+${questionData ? `**Error Category:** ${questionData.errorCategory}` : ''}
 
-    prompt += `TASK:\n${analyzedProblem || this.analyzeErrorPattern(context)}\n\n`;
+=== CODE WITH ERROR ===
 
-    prompt += `INSTRUCTIONS:\n${specificFixSteps || this.generateFixInstructions(context)}\n\n`;
+\`\`\`${context.language}
+${context.surroundingCode}
+\`\`\`
 
-    prompt += `Please provide a complete code fix based on the context above.`;
+${this.buildImportsSection(context)}
+${this.buildGitDiffSection(context)}
+${this.buildRecentChangesSection(context)}
+
+=== YOUR QUESTION ===
+
+${questionData ? questionData.question : 'What should this code do?'}
+
+=== USER'S ANSWER ===
+
+${userAnswer}
+
+=== YOUR TASK ===
+
+Based on the user's answer, provide a complete fix that:
+
+1. **Fixes the error completely** - address the root cause, not just symptoms
+2. **Matches user intent** - implement exactly what they described in their answer
+3. **Follows best practices** - use proper ${context.language} patterns
+4. **Includes explanation** - explain what was wrong and how your fix addresses it
+5. **Shows complete code** - provide the corrected code block with syntax highlighting
+
+**Format your response as:**
+
+## 🔍 What Was Wrong
+
+[Brief explanation of the error]
+
+## ✅ The Fix
+
+\`\`\`${context.language}
+[Complete fixed code]
+\`\`\`
+
+## 📝 Explanation
+
+[Explain how this fix addresses the user's intent and why it works]
+
+${context.language === 'typescript' ? '\n**Note:** Use proper TypeScript types.' : ''}
+${context.language === 'javascript' ? '\n**Note:** Follow modern JavaScript (ES6+) best practices.' : ''}
+
+Begin your response now:`;
 
     return prompt;
   }
 
-  private analyzeErrorPattern(context: DebugContext): string {
+  /**
+   * Build initial analysis prompt (without user answer)
+   */
+  private buildInitialAnalysisPrompt(userInput: string, context: DebugContext): string {
+    let prompt = `You are an expert debugging assistant. Analyze this error and provide insights.
+
+=== CONTEXT ===
+
+**File:** ${context.fileName}
+**Language:** ${context.language}
+**Error Location:** Line ${context.errorLine}
+**Error Message:** ${context.error.message}
+
+=== CODE WITH ERROR ===
+
+\`\`\`${context.language}
+${context.surroundingCode}
+\`\`\`
+
+${this.buildImportsSection(context)}
+
+=== USER REQUEST ===
+
+${userInput}
+
+=== YOUR TASK ===
+
+Provide a preliminary analysis of this error. Explain what's happening and potential causes.
+
+Begin your analysis:`;
+
+    return prompt;
+  }
+
+  /**
+   * Build imports section if available
+   */
+  private buildImportsSection(context: DebugContext): string {
+    if (!context.relatedImports || context.relatedImports.length === 0) {
+      return '';
+    }
+
+    return `
+=== RELATED IMPORTS ===
+
+\`\`\`${context.language}
+${context.relatedImports.join('\n')}
+\`\`\`
+`;
+  }
+
+  /**
+   * Build git diff section if available
+   */
+  private buildGitDiffSection(context: DebugContext): string {
+    if (
+      !context.gitDiff ||
+      context.gitDiff === 'No changes' ||
+      context.gitDiff.includes('failed')
+    ) {
+      return '';
+    }
+
+    return `
+=== RECENT CODE CHANGES (Git Diff) ===
+
+\`\`\`diff
+${context.gitDiff}
+\`\`\`
+`;
+  }
+
+  /**
+   * Build recent changes section
+   */
+  private buildRecentChangesSection(context: DebugContext): string {
+    if (!context.recentChanges || context.recentChanges.length === 0) {
+      return '';
+    }
+
+    return `
+=== RECENT ACTIVITY ===
+
+${context.recentChanges.map(change => `- ${change}`).join('\n')}
+`;
+  }
+
+  /**
+   * Analyze error pattern for additional context
+   */
+  analyzeErrorPattern(context: DebugContext): string {
     const errorMsg = context.error.message.toLowerCase();
     const code = context.surroundingCode.toLowerCase();
 
     if (errorMsg.includes('null') || errorMsg.includes('undefined')) {
-      return 'The error suggests a null/undefined reference. Check for proper null checks and initialization.';
+      return 'Null/undefined reference - likely missing initialization or async timing issue.';
     }
 
     if (errorMsg.includes('async') || errorMsg.includes('await') || errorMsg.includes('promise')) {
-      return 'This appears to be an async/await or Promise-related error. Verify proper async handling and error catching.';
+      return 'Async/await issue - verify proper async handling and error catching.';
     }
 
     if (context.language === 'javascript' || context.language === 'typescript') {
       if (code.includes('document.') || code.includes('element')) {
-        return 'DOM manipulation error detected. Check element existence and timing of DOM access.';
+        return 'DOM manipulation error - check element existence and timing.';
       }
     }
 
     if (errorMsg.includes('cannot find') || errorMsg.includes('module not found')) {
-      return 'Module import error. Verify import paths and module availability.';
+      return 'Module import error - verify import paths and package installation.';
     }
 
-    return 'General error analysis: Review the code for common issues like variable scoping, type mismatches, or missing dependencies.';
+    if (errorMsg.includes('is not a function')) {
+      return 'Function reference error - check if function is properly defined or imported.';
+    }
+
+    return 'General error - review code logic and syntax.';
   }
 
-  private generateFixInstructions(context: DebugContext): string {
-    let instructions = `1. Analyze the error "${context.error.message}" in ${context.language}\n`;
-    instructions += `2. Focus on line ${context.errorLine} and surrounding code\n`;
-    instructions += `3. Provide a complete, working code fix\n`;
-    instructions += `4. Explain what was wrong and how the fix addresses it\n`;
-    instructions += `5. Use proper ${context.language} syntax and best practices\n`;
-    instructions += `6. Include any necessary imports or dependencies\n`;
-    instructions += `7. Show only the changed code, not the entire file`;
-
-    return instructions;
+  /**
+   * Generate fix instructions based on context
+   */
+  generateFixInstructions(context: DebugContext): string {
+    return `
+1. Analyze the error "${context.error.message}" in ${context.language}
+2. Focus on line ${context.errorLine} and surrounding context
+3. Consider the user's clarification about their intent
+4. Provide a complete, working code fix
+5. Explain what was wrong and how the fix addresses it
+6. Use proper ${context.language} syntax and best practices
+7. Include any necessary imports or dependencies
+8. Show the complete fixed code block
+`.trim();
   }
 }
