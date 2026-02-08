@@ -7,76 +7,83 @@ export class PromptEnhancer {
     return `Please help debug this: ${prompt}`;
   }
 
-  enhancePrompt(userInput: string, context: DebugContext): string {
-    const prompt = this.buildPromptTemplate(userInput, context);
+  enhancePrompt(
+    userInput: string,
+    context: DebugContext,
+    userAnswer?: string,
+    analyzedProblem?: string,
+    specificFixSteps?: string
+  ): string {
+    const prompt = this.buildPromptTemplate(
+      userInput,
+      context,
+      userAnswer,
+      analyzedProblem,
+      specificFixSteps
+    );
     return prompt;
   }
 
-  private buildPromptTemplate(userInput: string, context: DebugContext): string {
-    let prompt = `# Code Debugging Request\n\n`;
+  private buildPromptTemplate(
+    userInput: string,
+    context: DebugContext,
+    userAnswer?: string,
+    analyzedProblem?: string,
+    specificFixSteps?: string
+  ): string {
+    let prompt = `CONTEXT:\n\n`;
+    prompt += `File: ${context.fileName}\n`;
+    prompt += `Error: ${context.error.message}\n`;
+    prompt += `Line: ${context.errorLine}\n`;
+    prompt += `Language: ${context.language}\n\n`;
 
-    // Technical context section
-    prompt += `## Technical Context\n`;
-    prompt += `- **Language**: ${context.language}\n`;
-    prompt += `- **File**: ${context.fileName}\n`;
-    prompt += `- **Error Line**: ${context.errorLine}\n`;
-    prompt += `- **Error Message**: ${context.error.message}\n`;
-    prompt += `- **Error Severity**: ${context.error.severity}\n`;
-    prompt += `- **Error Persisted**: ${context.error.hasPersisted ? 'Yes' : 'No'}\n`;
-    if (context.error.fileChangedWhileError) {
-      prompt += `- **File Changed While Error Present**: Yes (possible Copilot attempt)\n`;
-    }
-    prompt += `\n`;
+    prompt += `SURROUNDING CODE:\n${context.surroundingCode}\n\n`;
 
-    // Surrounding code
-    prompt += `## Code Context\n`;
-    prompt += `Error location and surrounding code:\n\`\`\`${context.language}\n${context.surroundingCode}\n\`\`\`\n\n`;
+    prompt += `USER CLARIFICATION:\n${userAnswer || 'Not provided'}\n\n`;
 
-    // User input
-    prompt += `## User Request\n`;
-    prompt += `${userInput}\n\n`;
+    prompt += `TASK:\n${analyzedProblem || this.analyzeErrorPattern(context)}\n\n`;
 
-    // Error history
-    prompt += `## Error History\n`;
-    prompt += `- First detected: ${context.error.firstDetected}\n`;
-    prompt += `- Last seen: ${context.error.lastSeen}\n`;
-    prompt += `- Duration: ${Math.round((context.error.lastSeen - context.error.firstDetected) / 1000)} seconds\n`;
-    if (context.recentChanges.length > 0) {
-      prompt += `- Recent file changes: ${context.recentChanges.join(', ')}\n`;
-    }
-    prompt += `\n`;
+    prompt += `INSTRUCTIONS:\n${specificFixSteps || this.generateFixInstructions(context)}\n\n`;
 
-    // Additional context
-    if (context.activeSelection) {
-      prompt += `## Active Selection\n\`\`\`${context.language}\n${context.activeSelection}\n\`\`\`\n\n`;
-    }
-
-    if (context.relatedImports && context.relatedImports.length > 0) {
-      prompt += `## Related Imports\n${context.relatedImports.map(imp => `- ${imp}`).join('\n')}\n\n`;
-    }
-
-    if (context.gitDiff) {
-      prompt += `## Recent Git Changes\n\`\`\`diff\n${context.gitDiff}\n\`\`\`\n\n`;
-    }
-
-    // Instructions
-    prompt += `## Instructions\n`;
-    prompt += `1. Analyze the error and context above\n`;
-    prompt += `2. Provide a complete, working code fix\n`;
-    prompt += `3. Explain what was wrong and how the fix addresses it\n`;
-    prompt += `4. Ensure the fix is in the correct language (${context.language})\n`;
-    prompt += `5. Include only the necessary code changes, not the entire file\n`;
-    prompt += `6. Use proper error handling and best practices\n\n`;
-
-    // Code formatting
-    prompt += `## Code Formatting Requirements\n`;
-    prompt += `- Use ${context.language} syntax\n`;
-    prompt += `- Include line numbers if showing multiple lines\n`;
-    prompt += `- Show the exact replacement code\n`;
-    prompt += `- Explain any new imports or dependencies needed\n\n`;
-
-    prompt += `Please provide the fix now.`;
+    prompt += `Please provide a complete code fix based on the context above.`;
 
     return prompt;
+  }
+
+  private analyzeErrorPattern(context: DebugContext): string {
+    const errorMsg = context.error.message.toLowerCase();
+    const code = context.surroundingCode.toLowerCase();
+
+    if (errorMsg.includes('null') || errorMsg.includes('undefined')) {
+      return 'The error suggests a null/undefined reference. Check for proper null checks and initialization.';
+    }
+
+    if (errorMsg.includes('async') || errorMsg.includes('await') || errorMsg.includes('promise')) {
+      return 'This appears to be an async/await or Promise-related error. Verify proper async handling and error catching.';
+    }
+
+    if (context.language === 'javascript' || context.language === 'typescript') {
+      if (code.includes('document.') || code.includes('element')) {
+        return 'DOM manipulation error detected. Check element existence and timing of DOM access.';
+      }
+    }
+
+    if (errorMsg.includes('cannot find') || errorMsg.includes('module not found')) {
+      return 'Module import error. Verify import paths and module availability.';
+    }
+
+    return 'General error analysis: Review the code for common issues like variable scoping, type mismatches, or missing dependencies.';
+  }
+
+  private generateFixInstructions(context: DebugContext): string {
+    let instructions = `1. Analyze the error "${context.error.message}" in ${context.language}\n`;
+    instructions += `2. Focus on line ${context.errorLine} and surrounding code\n`;
+    instructions += `3. Provide a complete, working code fix\n`;
+    instructions += `4. Explain what was wrong and how the fix addresses it\n`;
+    instructions += `5. Use proper ${context.language} syntax and best practices\n`;
+    instructions += `6. Include any necessary imports or dependencies\n`;
+    instructions += `7. Show only the changed code, not the entire file`;
+
+    return instructions;
   }
 }
