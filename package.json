@@ -2,7 +2,7 @@
   "name": "vibe-debugger",
   "displayName": "Vibe Debugger",
   "description": "Helps beginners fix code errors by asking clarifying questions before fixing",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "RavikumarBadami",
   "repository": {
     "type": "git",
@@ -34,10 +34,27 @@
   ],
   "pricing": "Free",
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:python"
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "chatParticipants": [
+      {
+        "id": "vibedebugger",
+        "name": "Vibe Debugger",
+        "description": "Asks clarifying questions before fixing errors",
+        "isSticky": true,
+        "commands": [
+          {
+            "name": "fix",
+            "description": "Fix code errors with clarifying questions"
+          }
+        ]
+      }
+    ],
     "commands": [
       {
         "command": "vibedebugger.runDemo",

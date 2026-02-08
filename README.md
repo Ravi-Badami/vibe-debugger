@@ -1,247 +1,134 @@
 # Vibe Debugger
 
-[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/vibe-debugger.vibe-debugger)](https://marketplace.visualstudio.com/items?itemName=vibe-debugger.vibe-debugger)
-[![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/vibe-debugger.vibe-debugger)](https://marketplace.visualstudio.com/items?itemName=vibe-debugger.vibe-debugger)
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/RavikumarBadami.vibe-debugger)](https://marketplace.visualstudio.com/items?itemName=RavikumarBadami.vibe-debugger)
+[![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/RavikumarBadami.vibe-debugger)](https://marketplace.visualstudio.com/items?itemName=RavikumarBadami.vibe-debugger)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-An AI-powered debugging assistant for Visual Studio Code that helps beginners fix code errors by asking clarifying questions before providing solutions.
+An intelligent AI-powered debugging assistant for Visual Studio Code that transforms how beginners learn to debug code. Instead of providing direct answers, Vibe Debugger asks targeted questions to guide developers through the debugging process, building problem-solving skills.
 
-## ✨ Features
+## ✨ Key Features
 
-- 🔍 **Automatic Error Detection**: Monitors your code for errors in real-time
-- 🤖 **Smart Question Generation**: Asks context-aware clarifying questions before suggesting fixes
-- 💬 **Interactive Chat Support**: Chat with the AI debugger using `@vibedebugger`
-- ⚙️ **Configurable Notifications**: Customize when and how you receive error notifications
-- 🎯 **Context-Aware Analysis**: Captures file content, recent changes, and error context
-- 🚀 **Demo Mode**: Try the extension with sample error files
+### 🤖 Intelligent Error Analysis
 
-## 🚀 Quick Start
+- **Real-time Error Detection**: Automatically monitors your code for syntax and runtime errors
+- **Context-Aware Analysis**: Captures file content, error details, and surrounding code context
+- **Smart Diagnostics**: Understands error patterns and provides relevant insights
+
+### 🎓 Educational Approach
+
+- **Guided Learning**: Asks clarifying questions instead of giving direct answers
+- **Progressive Disclosure**: Builds understanding step by step
+- **Problem-Solving Skills**: Teaches debugging methodology, not just fixes
+
+### 💬 Interactive Chat Interface
+
+- **Natural Language Support**: Chat with the AI debugger using `@vibedebugger`
+- **Conversational Debugging**: Explain your issues in plain English
+- **Follow-up Questions**: Refines understanding based on your responses
+
+### ⚙️ Customizable Experience
+
+- **Flexible Notifications**: Configure when and how you receive error alerts
+- **Rate Limiting**: Control notification frequency to avoid disruption
+- **Debug Mode**: Enable detailed logging for troubleshooting
+
+### 🚀 Demo Mode
+
+- **Interactive Learning**: Try the extension with pre-built error scenarios
+- **Sample Cases**: Null reference errors, async/await issues, DOM manipulation problems
+- **Guided Experience**: Learn through hands-on examples
+
+## 🚀 Getting Started
 
 ### Installation
 
-1. Open Visual Studio Code
-2. Go to Extensions (Ctrl+Shift+X)
-3. Search for "Vibe Debugger"
-4. Click Install
+1. Open **Visual Studio Code**
+2. Navigate to the **Extensions** view (`Ctrl+Shift+X` / `Cmd+Shift+X`)
+3. Search for **"Vibe Debugger"**
+4. Click **Install**
 
-### First Use
+### Quick Start
 
-1. Open any file with code errors
-2. Wait for automatic error detection (default: 10 seconds)
-3. Click "Help Me" when the notification appears
-4. Answer the clarifying questions
-5. Receive AI-powered fix suggestions
+1. **Open a JavaScript or TypeScript file** in your workspace
+2. **Introduce an error** (e.g., reference an undefined variable)
+3. **Wait for the notification** (appears after 10 seconds by default)
+4. **Click "Help Me"** when the notification appears
+5. **Answer the questions** posed by the AI debugger
+6. **Learn and apply** the suggested debugging approach
 
-## 🎮 Demo Mode
+## 💬 Using the Chat Interface
 
-Experience Vibe Debugger with intentionally buggy sample files:
-
-1. Open Command Palette (Ctrl+Shift+P)
-2. Run "Vibe Debugger: Run Demo"
-3. Select a demo file:
-   - **Null Reference Error**: Common JavaScript null/undefined issues
-   - **Async/Promise Error**: Promise handling and async/await problems
-   - **DOM Error**: HTML/DOM manipulation issues
-
-The demo will open a guide panel explaining what to expect and how the extension works.
-
-## 💬 Chat Interface
-
-Interact directly with Vibe Debugger using the chat interface:
+Interact naturally with Vibe Debugger through VS Code's chat interface:
 
 ```
-@vibedebugger I need help with an error
+@vibedebugger I have a null reference error on line 25
+@vibedebugger Help me debug this async function
+@vibedebugger Why is my variable undefined?
 ```
 
-The AI will analyze your current file and ask clarifying questions to provide better assistance.
+The AI will analyze your current file context and ask targeted questions to guide your debugging process.
+
+## 🎮 Try the Demo
+
+Experience Vibe Debugger's capabilities with our interactive demo:
+
+1. Open the **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+2. Run **"Vibe Debugger: Run Demo"**
+3. Choose from sample error scenarios:
+   - **Null Reference Errors**: Common undefined/null issues
+   - **Async/Await Problems**: Promise and asynchronous code issues
+   - **DOM Manipulation**: Browser API and DOM-related errors
 
 ## ⚙️ Configuration
 
-Customize Vibe Debugger through VS Code settings:
+Customize Vibe Debugger through VS Code settings (`Ctrl+,`):
 
-### Auto Notifications
-
-- **Setting**: `vibedebugger.autoNotify`
-- **Type**: Boolean
-- **Default**: `true`
-- **Description**: Enable automatic error notifications
-
-### Notification Delay
-
-- **Setting**: `vibedebugger.notificationDelay`
-- **Type**: Number (seconds)
-- **Default**: `10`
-- **Description**: Delay before showing error notifications
-
-### Debug Mode
-
-- **Setting**: `vibedebugger.debugMode`
-- **Type**: Boolean
-- **Default**: `false`
-- **Description**: Enable additional logging for troubleshooting
-
-### Max Notifications per Hour
-
-- **Setting**: `vibedebugger.maxNotificationsPerHour`
-- **Type**: Number
-- **Default**: `5`
-- **Description**: Maximum number of notifications per hour
+| Setting                                | Description                                  | Default |
+| -------------------------------------- | -------------------------------------------- | ------- |
+| `vibedebugger.autoNotify`              | Enable automatic error notifications         | `true`  |
+| `vibedebugger.notificationDelay`       | Delay before showing notifications (seconds) | `10`    |
+| `vibedebugger.debugMode`               | Enable detailed logging                      | `false` |
+| `vibedebugger.maxNotificationsPerHour` | Maximum notifications per hour               | `5`     |
 
 ## 🔧 How It Works
 
-1. **Error Detection**: Monitors VS Code diagnostics for errors
-2. **Persistence Check**: Waits for errors to persist (configurable delay)
-3. **Context Capture**: Gathers file content, error details, and recent changes
-4. **Question Generation**: Creates context-aware clarifying questions
-5. **AI Enhancement**: Uses language models to provide intelligent suggestions
-6. **Interactive Fixes**: Guides users through understanding and fixing errors
+Vibe Debugger follows a systematic approach to teaching debugging:
 
-## 📁 Project Structure
+1. **Error Detection**: Monitors VS Code's diagnostic system for errors
+2. **Context Analysis**: Gathers relevant code context and error details
+3. **Question Generation**: Creates targeted questions based on error type and context
+4. **Interactive Learning**: Guides you through the debugging process
+5. **Skill Building**: Helps you develop independent debugging abilities
 
-```
-vibe-debugger/
-├── src/
-│   ├── extension.ts          # Main extension entry point
-│   ├── errorMonitor.ts       # Error detection and monitoring
-│   ├── contextCapture.ts     # Debug context gathering
-│   ├── promptEnhancer.ts     # AI prompt enhancement
-│   ├── notificationHandler.ts # User notifications
-│   ├── questionGenerator.ts  # Smart question generation
-│   ├── config.ts            # Configuration management
-│   └── test/
-│       ├── suite/
-│       │   └── extension.test.ts
-│       └── questionGenerator.test.ts
-├── demo/
-│   └── sample-errors/
-│       ├── null-error.js
-│       ├── async-error.js
-│       └── dom-error.html
-├── package.json
-└── README.md
-```
+## 📋 Requirements
 
-## 🧪 Testing
+- **Visual Studio Code**: Version 1.109.0 or higher
+- **Supported Languages**: JavaScript, TypeScript
+- **Internet Connection**: Required for AI-powered features
 
-### Running Tests
+## 🐛 Known Issues
 
-The extension includes comprehensive test coverage. To run the test suite:
+- Complex error patterns may require additional context
+- Performance may vary with very large files
+- Some advanced debugging scenarios need manual intervention
 
-```bash
-npm test
-```
+## 🙋 Support
 
-**Note**: If you encounter path resolution issues (common with workspace paths containing spaces), you can run tests manually:
-
-```bash
-# Compile tests
-npm run compile-tests
-
-# Run compiled tests with Node.js
-node out/test/extension.test.js
-node out/test/questionGenerator.test.js
-node out/test/suite/extension.test.js
-```
-
-### Test Coverage
-
-Tests cover:
-
-- ✅ Error detection functionality
-- ✅ Context capture accuracy
-- ✅ Prompt enhancement
-- ✅ Notification triggering
-- ✅ Configuration management
-- ✅ Component integration
-- ✅ Question generation logic
-
-### Test Structure
-
-```
-test/
-├── extension.test.ts          # Basic extension tests
-├── questionGenerator.test.ts  # Unit tests for question generation
-└── suite/
-    └── extension.test.ts      # Comprehensive integration tests
-```
+- **Documentation**: [GitHub Repository](https://github.com/Ravi-Badami/vibe-debugger)
+- **Issues**: [GitHub Issues](https://github.com/Ravi-Badami/vibe-debugger/issues)
+- **Chat Support**: Use `@vibedebugger` in VS Code's chat interface
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Run the test suite
-6. Submit a pull request
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-## 📝 License
+## 📄 License
 
-MIT License - see LICENSE file for details.
-
-## � Publishing
-
-### Prerequisites
-
-Before publishing, ensure you have:
-
-1. **VS Code Marketplace Account**: Create a publisher account at [Visual Studio Marketplace](https://marketplace.visualstudio.com/manage/publishers/)
-2. **Personal Access Token**: Generate a PAT with marketplace publishing permissions
-3. **Extension Icon**: Add a 128x128 PNG icon at `images/icon.png`
-4. **Publisher ID**: Update `publisher` field in `package.json` with your marketplace ID
-
-### Publishing Steps
-
-1. **Update Publisher ID**:
-
-   ```json
-   {
-     "publisher": "your-marketplace-publisher-id"
-   }
-   ```
-
-2. **Package the Extension**:
-
-   ```bash
-   npm run package-vsix
-   ```
-
-3. **Publish to Marketplace**:
-
-   ```bash
-   npm run publish
-   ```
-
-   Or manually:
-
-   ```bash
-   npx @vscode/vsce publish
-   ```
-
-### Pre-Publish Checklist
-
-- [ ] All tests pass (`npm test`)
-- [ ] No TypeScript errors (`npm run compile`)
-- [ ] Code passes linting (`npm run lint`)
-- [ ] README includes demo instructions
-- [ ] Extension icon is added
-- [ ] Publisher ID is set
-- [ ] Version number is updated
-- [ ] CHANGELOG.md is updated
-
-## �🐛 Known Issues
-
-- Demo mode requires the extension to be properly installed
-- Some complex error patterns may need additional context
-- Performance may vary based on file size and complexity
-- Test runner may have issues with workspace paths containing spaces (use manual test execution as workaround)
-
-## 🙏 Acknowledgments
-
-- Built with VS Code Extension API
-- Uses GitHub Copilot Chat for AI assistance
-- Inspired by the need for better debugging education
+This extension is licensed under the [MIT License](LICENSE).
 
 ---
 
-**Happy Debugging!** 🎉
+**Transform your debugging experience with AI-powered guidance.** 🚀
 
-For support, please file an issue on GitHub or use the VS Code chat interface with `@vibedebugger`.
+_Built with ❤️ for the developer community_
+  
