@@ -2,7 +2,7 @@
   "name": "vibe-debugger",
   "displayName": "Vibe Debugger",
   "description": "Enhances GitHub Copilot by asking clarifying questions and providing rich context for better error fixes",
-  "version": "0.2.0",
+  "version": "0.1.5",
   "publisher": "RavikumarBadami",
   "repository": {
     "type": "git",
@@ -28,6 +28,9 @@
   "engines": {
     "vscode": "^1.109.0"
   },
+  "extensionDependencies": [
+    "GitHub.copilot-chat"
+  ],
   "categories": [
     "AI",
     "Debuggers",
