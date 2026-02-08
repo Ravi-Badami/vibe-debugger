@@ -121,9 +121,21 @@ async function runDemo(): Promise<void> {
 
     // Show demo file picker
     const demoFiles = [
-      { label: 'Null Reference Error (JavaScript)', file: 'null-error.js', description: 'Common null/undefined reference errors' },
-      { label: 'Async/Promise Error (JavaScript)', file: 'async-error.js', description: 'Promise handling and async/await issues' },
-      { label: 'DOM Manipulation Error (HTML)', file: 'dom-error.html', description: 'DOM element access and manipulation errors' }
+      {
+        label: 'Null Reference Error (JavaScript)',
+        file: 'null-error.js',
+        description: 'Common null/undefined reference errors'
+      },
+      {
+        label: 'Async/Promise Error (JavaScript)',
+        file: 'async-error.js',
+        description: 'Promise handling and async/await issues'
+      },
+      {
+        label: 'DOM Manipulation Error (HTML)',
+        file: 'dom-error.html',
+        description: 'DOM element access and manipulation errors'
+      }
     ];
 
     const selectedDemo = await vscode.window.showQuickPick(demoFiles, {
@@ -164,7 +176,6 @@ Try modifying the code or click the notification when it appears!`;
     );
 
     panel.webview.html = getDemoGuideHtml(message, selectedDemo);
-
   } catch (error) {
     console.error('Error running demo:', error);
     vscode.window.showErrorMessage('Failed to run demo. Check the console for details.');

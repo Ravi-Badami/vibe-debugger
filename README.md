@@ -59,24 +59,28 @@ The AI will analyze your current file and ask clarifying questions to provide be
 Customize Vibe Debugger through VS Code settings:
 
 ### Auto Notifications
+
 - **Setting**: `vibedebugger.autoNotify`
 - **Type**: Boolean
 - **Default**: `true`
 - **Description**: Enable automatic error notifications
 
 ### Notification Delay
+
 - **Setting**: `vibedebugger.notificationDelay`
 - **Type**: Number (seconds)
 - **Default**: `10`
 - **Description**: Delay before showing error notifications
 
 ### Debug Mode
+
 - **Setting**: `vibedebugger.debugMode`
 - **Type**: Boolean
 - **Default**: `false`
 - **Description**: Enable additional logging for troubleshooting
 
 ### Max Notifications per Hour
+
 - **Setting**: `vibedebugger.maxNotificationsPerHour`
 - **Type**: Number
 - **Default**: `5`
@@ -141,6 +145,7 @@ node out/test/suite/extension.test.js
 ### Test Coverage
 
 Tests cover:
+
 - ✅ Error detection functionality
 - ✅ Context capture accuracy
 - ✅ Prompt enhancement
