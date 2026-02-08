@@ -4,6 +4,7 @@ import { ErrorMonitor } from './errorMonitor';
 import { ContextCapture, DebugContext } from './contextCapture';
 import { PromptEnhancer } from './promptEnhancer';
 import { NotificationHandler } from './notificationHandler';
+import { QuestionGenerator } from './questionGenerator';
 
 // Global variables
 let statusBarItem: vscode.StatusBarItem;
@@ -11,6 +12,7 @@ let errorMonitor: ErrorMonitor;
 let contextCapture: ContextCapture;
 let promptEnhancer: PromptEnhancer;
 let notificationHandler: NotificationHandler;
+let questionGenerator: QuestionGenerator;
 let debugContexts: Map<string, DebugContext> = new Map();
 
 async function handleChatRequest(
@@ -96,20 +98,10 @@ async function handleChatRequest(
     const debugContext = await contextCapture.captureContext(errorData);
     debugContexts.set(filePath, debugContext);
 
-    // Generate clarifying question using language model
-    const models = await vscode.lm.selectChatModels();
-    const model = models[0];
-    const questionPrompt = `Based on this error: "${error.message}" in ${debugContext.language} at line ${error.range.start.line}, ask one simple clarifying question to understand what the user wants to achieve. Keep it beginner-friendly.`;
+    // Generate clarifying question using QuestionGenerator
+    const questionData = questionGenerator.generateQuestion(debugContext);
 
-    const messages = [vscode.LanguageModelChatMessage.User(questionPrompt)];
-
-    const response = await model.sendRequest(messages, {}, token);
-    let question = '';
-    for await (const fragment of response.text) {
-      question += fragment;
-    }
-
-    stream.markdown(question);
+    stream.markdown(questionData.question);
   }
 }
 
@@ -122,6 +114,7 @@ export function activate(context: vscode.ExtensionContext) {
     errorMonitor = new ErrorMonitor();
     contextCapture = new ContextCapture();
     promptEnhancer = new PromptEnhancer();
+    questionGenerator = new QuestionGenerator();
 
     // Start error monitoring
     errorMonitor.startMonitoring();
