@@ -1,6 +1,31 @@
 import * as assert from 'assert';
 import { QuestionGenerator } from '../../src/questionGenerator';
 import { DebugContext } from '../../src/contextCapture';
+import { Config } from '../../src/config';
+
+suite('Config Test Suite', () => {
+  test('should have correct default values', () => {
+    const config = Config.getAll();
+
+    assert.strictEqual(config.autoNotify, true);
+    assert.strictEqual(config.notificationDelay, 10);
+    assert.strictEqual(config.debugMode, false);
+    assert.strictEqual(config.maxNotificationsPerHour, 5);
+  });
+
+  test('should validate numeric settings', () => {
+    // Test that negative values are rejected
+    const validatedValue = (Config as any).validateNumericSetting(-5, 'testSetting');
+    assert.strictEqual(validatedValue, undefined); // Should return default
+  });
+
+  test('should provide type-safe getters', () => {
+    assert.strictEqual(typeof Config.autoNotify, 'boolean');
+    assert.strictEqual(typeof Config.notificationDelay, 'number');
+    assert.strictEqual(typeof Config.debugMode, 'boolean');
+    assert.strictEqual(typeof Config.maxNotificationsPerHour, 'number');
+  });
+});
 
 suite('QuestionGenerator Test Suite', () => {
   let questionGenerator: QuestionGenerator;

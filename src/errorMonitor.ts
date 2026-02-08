@@ -1,6 +1,7 @@
 // Error Monitor module
 import * as vscode from 'vscode';
 import { EventEmitter } from 'events';
+import { Config } from './config';
 
 export interface ErrorData {
   filePath: string;
@@ -48,6 +49,12 @@ export class ErrorMonitor extends EventEmitter {
   onDiagnosticsChange(event: vscode.DiagnosticChangeEvent): void {
     const now = Date.now();
 
+    if (Config.debugMode) {
+      console.log(
+        `[Vibe Debugger Debug] Processing diagnostic changes for ${event.uris.length} files`
+      );
+    }
+
     // Process each URI in the event
     for (const uri of event.uris) {
       const filePath = uri.fsPath;
@@ -73,6 +80,11 @@ export class ErrorMonitor extends EventEmitter {
           const timeDiff = now - existing.firstDetected;
           if (timeDiff >= 10000 && !existing.hasPersisted) {
             existing.hasPersisted = true;
+            if (Config.debugMode) {
+              console.log(
+                `[Vibe Debugger Debug] Error persisted: ${existing.message} at ${existing.filePath}:${existing.line}`
+              );
+            }
             this.emit('errorPersisted', existing);
           }
           // Check if file changed while error persisted
@@ -103,6 +115,12 @@ export class ErrorMonitor extends EventEmitter {
           fileChangedWhileError: false
         };
         updatedErrors.push(newError);
+
+        if (Config.debugMode) {
+          console.log(
+            `[Vibe Debugger Debug] New error detected: ${newError.message} at ${filePath}:${newError.line}`
+          );
+        }
       }
 
       // Update the map

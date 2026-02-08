@@ -5,6 +5,7 @@ import { ContextCapture, DebugContext } from './contextCapture';
 import { PromptEnhancer } from './promptEnhancer';
 import { NotificationHandler } from './notificationHandler';
 import { QuestionGenerator } from './questionGenerator';
+import { Config } from './config';
 
 // Global variables
 let statusBarItem: vscode.StatusBarItem;
@@ -128,6 +129,33 @@ export function activate(context: vscode.ExtensionContext) {
       // TODO: Trigger chat or notification
     });
 
+    // Listen for configuration changes
+    const configSubscription = Config.onDidChangeConfiguration(newConfig => {
+      console.log('Vibe Debugger configuration changed:', newConfig);
+
+      // Update notification handler with new settings
+      if (notificationHandler) {
+        // The notification handler will automatically pick up new config values
+        // when its methods are called
+      }
+
+      // Update error monitor behavior if needed
+      if (errorMonitor) {
+        // Error monitor can check Config.debugMode for additional logging
+        if (Config.debugMode) {
+          console.log('Debug mode enabled - additional logging active');
+        }
+      }
+
+      // Update status bar based on autoNotify setting
+      if (statusBarItem) {
+        const icon = Config.autoNotify ? '🔍' : '🔍❌';
+        statusBarItem.text = `${icon} Vibe Debugger ${Config.autoNotify ? 'Active' : 'Notifications Off'}`;
+        statusBarItem.tooltip = `Vibe Debugger is monitoring for errors. Auto-notify: ${Config.autoNotify}`;
+      }
+    });
+    context.subscriptions.push(configSubscription);
+
     // Register chat participant
     const chatParticipant = vscode.chat.createChatParticipant(
       'vibedebugger',
@@ -145,8 +173,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Create status bar item
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    statusBarItem.text = '🔍 Vibe Debugger Active';
-    statusBarItem.tooltip = 'Vibe Debugger is monitoring for errors';
+    const icon = Config.autoNotify ? '🔍' : '🔍❌';
+    statusBarItem.text = `${icon} Vibe Debugger ${Config.autoNotify ? 'Active' : 'Notifications Off'}`;
+    statusBarItem.tooltip = `Vibe Debugger is monitoring for errors. Auto-notify: ${Config.autoNotify}`;
     statusBarItem.show();
     context.subscriptions.push(statusBarItem);
 

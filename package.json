@@ -25,17 +25,22 @@
     "configuration": {
       "title": "Vibe Debugger",
       "properties": {
-        "vibeDebugger.enableAutoNotifications": {
+        "vibedebugger.autoNotify": {
           "type": "boolean",
           "default": true,
           "description": "Enable automatic error notifications"
         },
-        "vibeDebugger.minErrorPersistenceTime": {
+        "vibedebugger.notificationDelay": {
           "type": "number",
-          "default": 10000,
-          "description": "Minimum time (ms) an error must persist before notification"
+          "default": 10,
+          "description": "Delay in seconds before showing error notifications"
         },
-        "vibeDebugger.maxNotificationsPerHour": {
+        "vibedebugger.debugMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable debug mode for additional logging"
+        },
+        "vibedebugger.maxNotificationsPerHour": {
           "type": "number",
           "default": 5,
           "description": "Maximum number of notifications per hour"
