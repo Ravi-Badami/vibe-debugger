@@ -3,6 +3,8 @@
 out/**
 node_modules/**
 src/**
+test/**
+demo/**
 .gitignore
 .yarnrc
 webpack.config.js
@@ -12,3 +14,10 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+.github/**
+.git/**
+**/*.tsbuildinfo
+.nyc_output
+coverage
+**/*.vsix
+.eslintrc.json

@@ -2,25 +2,43 @@
   "name": "vibe-debugger",
   "displayName": "Vibe Debugger",
   "description": "Helps beginners fix code errors by asking clarifying questions before fixing",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "publisher": "RavikumarBadami",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ravi-Badami/vibe-debugger"
+  },
+  "license": "MIT",
+  "keywords": [
+    "ai",
+    "debugging",
+    "copilot",
+    "beginner",
+    "error-fixing",
+    "javascript",
+    "typescript",
+    "education"
+  ],
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "icon": "images/icon.webp",
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.109.0"
   },
   "categories": [
-    "Programming Languages",
+    "AI",
     "Debuggers",
-    "AI"
+    "Education"
   ],
+  "pricing": "Free",
   "activationEvents": [
     "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "vibe-debugger.helloWorld",
-        "title": "Hello World"
-      },
       {
         "command": "vibedebugger.runDemo",
         "title": "Run Demo",
@@ -62,19 +80,24 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "package-vsix": "vsce package",
+    "publish": "vsce publish",
+    "prepublishOnly": "npm run test && npm run lint"
   },
   "devDependencies": {
-    "@types/vscode": "^1.109.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "typescript-eslint": "^8.54.0",
-    "eslint": "^9.39.2",
-    "typescript": "^5.9.3",
-    "ts-loader": "^9.5.4",
-    "webpack": "^5.104.1",
-    "webpack-cli": "^6.0.1",
+    "@types/vscode": "^1.109.0",
     "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.0.0",
+    "eslint": "^9.39.2",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0",
+    "vsce": "^2.15.0",
+    "webpack": "^5.104.1",
+    "webpack-cli": "^6.0.1"
   }
 }

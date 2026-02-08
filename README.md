@@ -177,7 +177,57 @@ test/
 
 MIT License - see LICENSE file for details.
 
-## 🐛 Known Issues
+## � Publishing
+
+### Prerequisites
+
+Before publishing, ensure you have:
+
+1. **VS Code Marketplace Account**: Create a publisher account at [Visual Studio Marketplace](https://marketplace.visualstudio.com/manage/publishers/)
+2. **Personal Access Token**: Generate a PAT with marketplace publishing permissions
+3. **Extension Icon**: Add a 128x128 PNG icon at `images/icon.png`
+4. **Publisher ID**: Update `publisher` field in `package.json` with your marketplace ID
+
+### Publishing Steps
+
+1. **Update Publisher ID**:
+
+   ```json
+   {
+     "publisher": "your-marketplace-publisher-id"
+   }
+   ```
+
+2. **Package the Extension**:
+
+   ```bash
+   npm run package-vsix
+   ```
+
+3. **Publish to Marketplace**:
+
+   ```bash
+   npm run publish
+   ```
+
+   Or manually:
+
+   ```bash
+   npx @vscode/vsce publish
+   ```
+
+### Pre-Publish Checklist
+
+- [ ] All tests pass (`npm test`)
+- [ ] No TypeScript errors (`npm run compile`)
+- [ ] Code passes linting (`npm run lint`)
+- [ ] README includes demo instructions
+- [ ] Extension icon is added
+- [ ] Publisher ID is set
+- [ ] Version number is updated
+- [ ] CHANGELOG.md is updated
+
+## �🐛 Known Issues
 
 - Demo mode requires the extension to be properly installed
 - Some complex error patterns may need additional context
