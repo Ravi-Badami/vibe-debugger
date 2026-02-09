@@ -2,7 +2,7 @@
   "name": "vibe-debugger",
   "displayName": "Vibe Debugger",
   "description": "Enhances GitHub Copilot by asking clarifying questions and providing rich context for better error fixes",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publisher": "RavikumarBadami",
   "repository": {
     "type": "git",

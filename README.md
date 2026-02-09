@@ -43,12 +43,29 @@ Vibe Debugger enhances GitHub Copilot by providing intelligent error analysis an
 5. Allow Vibe Debugger to provide enhanced context
 6. Request `@copilot` to generate a fix using the provided context
 
+#### Detailed Steps
+
+To use Vibe Debugger effectively:
+
+1. **Start the Chat**: Open the Copilot Chat interface in VS Code.
+2. **Invoke Vibe Debugger**: Type `@vibedebugger` followed by your request, such as "fix this error".
+3. **Provide Error Details**: Describe the error you're encountering.
+4. **Select an Option**: When Vibe Debugger presents clarifying questions or options, choose the most relevant one and press Enter.
+5. **Auto-Paste**: The selected option will automatically paste into the chat input.
+6. **Confirm**: Press Enter again to submit your response.
+7. **Receive Context**: Vibe Debugger will analyze and provide enhanced context for Copilot.
+8. **Generate Fix**: Use `@copilot` to request a fix based on the provided context.
+
 #### Example Interaction
 
 ```
 User: @vibedebugger fix this error
 Vibe Debugger: What type of error are you encountering?
-User: A null reference error
+  1. Null reference error
+  2. Async/await issue
+  3. DOM manipulation error
+  4. Other
+User: 1 [presses Enter]
 Vibe Debugger: [Provides enhanced context for Copilot]
 User: @copilot Please fix this null reference error using the context above
 ```
